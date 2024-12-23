@@ -1,13 +1,15 @@
+import { AlgorithmSelector } from '@/components/AlgorithmSelector/AlgorithmSelector';
 import { Header } from '@/components/Header/Header';
 import { ColorSchemeToggle } from '../components/ColorSchemeToggle/ColorSchemeToggle';
 import { Welcome } from '../components/Welcome/Welcome';
 
-export const HomePage =() => {
+export const HomePage = () => {
   return (
     <>
       {/* <Welcome />
       <ColorSchemeToggle /> */}
-      <Header/>
+      <Header />
+      <AlgorithmSelector />
     </>
   );
-}
+};

@@ -1,0 +1,24 @@
+.cell {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: background-color 0.2s ease; /* Pour une transition fluide lors des changements d'état */
+}
+
+.cell.empty {
+  background-color: #fff; /* Blanc pour les cellules vides */
+}
+
+.cell.start {
+  background-color: #4caf50; /* Vert pour le point de départ */
+}
+
+.cell.end {
+  background-color: #f44336; /* Rouge pour le point d'arrivée */
+}
+
+.cell.obstacle {
+  background-color: #333; /* Gris foncé pour les obstacles */
+}
