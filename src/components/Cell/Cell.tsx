@@ -1,6 +1,5 @@
 import { Box } from '@mantine/core';
-
-import './Cell.module.css';
+import classes from './Cell.module.css';
 
 export type CellType = 'empty' | 'start' | 'end' | 'obstacle';
 
@@ -8,29 +7,32 @@ interface CellProps {
   row: number;
   col: number;
   type: CellType;
-  onClick: (row: number, col: number) => void;
+  onMouseDown: (row: number, col: number) => void;
+  onMouseEnter: (row: number, col: number) => void;
 }
 
 export const Cell = (props: CellProps) => {
-  const { row, col, type, onClick } = props;
+  const { row, col, type, onMouseDown, onMouseEnter } = props;
 
   const getClassName = () => {
     switch (type) {
       case 'start':
-        return 'cell start';
+        return `${classes.cell} ${classes.start}`;
       case 'end':
-        return 'cell end';
+        return `${classes.cell} ${classes.end}`;
       case 'obstacle':
-        return 'cell obstacle';
+        return `${classes.cell} ${classes.obstacle}`;
       default:
-        return 'cell empty';
+        return `${classes.cell} ${classes.empty}`;
     }
   };
 
   return (
     <Box
+      size={'xs'}
       className={getClassName()}
-      onClick={() => onClick(row, col)}
+      onMouseDown={() => onMouseDown(row, col)}
+      onMouseEnter={() => onMouseEnter(row, col)}
       data-row={row}
       data-col={col}
     />

@@ -31,7 +31,9 @@
   padding: 7px var(--mantine-spacing-sm);
   font-weight: 700;
   border-bottom: 2px solid transparent;
-  transition: border-color 100ms ease, color 100ms ease;
+  transition:
+    border-color 100ms ease,
+    color 100ms ease;
 }
 .mainLink[data-active] {
   color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
@@ -44,5 +46,3 @@
   text-transform: uppercase;
   transition: color 100ms ease;
 }
-
-/*# sourceMappingURL=Header.module.css.map */

@@ -1,24 +1,22 @@
 .cell {
-  width: 20px;
-  height: 20px;
-  display: inline-block;
+  width: 15px;
+  height: 15px;
   border: 1px solid #ccc;
-  cursor: pointer;
-  transition: background-color 0.2s ease; /* Pour une transition fluide lors des changements d'état */
+  transition: background-color 0.3s ease;
 }
 
-.cell.empty {
-  background-color: #fff; /* Blanc pour les cellules vides */
+.start {
+  background-color: green;
 }
 
-.cell.start {
-  background-color: #4caf50; /* Vert pour le point de départ */
+.end {
+  background-color: red;
 }
 
-.cell.end {
-  background-color: #f44336; /* Rouge pour le point d'arrivée */
+.obstacle {
+  background-color: gray;
 }
 
-.cell.obstacle {
-  background-color: #333; /* Gris foncé pour les obstacles */
+.empty {
+  background-color: white;
 }
