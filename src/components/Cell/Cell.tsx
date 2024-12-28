@@ -1,7 +1,7 @@
 import { Box } from '@mantine/core';
 import classes from './Cell.module.css';
 
-export type CellType = 'empty' | 'start' | 'end' | 'obstacle';
+export type CellType = 'empty' | 'start' | 'end' | 'obstacle' | 'visited';
 
 interface CellProps {
   row: number;
