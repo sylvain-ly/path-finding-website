@@ -22,6 +22,8 @@ export const Cell = (props: CellProps) => {
         return `${classes.cell} ${classes.end}`;
       case 'obstacle':
         return `${classes.cell} ${classes.obstacle}`;
+      case 'visited':
+        return `${classes.cell} ${classes.visited}`;
       default:
         return `${classes.cell} ${classes.empty}`;
     }

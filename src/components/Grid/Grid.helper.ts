@@ -16,6 +16,26 @@ export const initializeGrid = (rows: number, cols: number): CellType[][] => {
   return grid;
 };
 
+export const findCell = (
+  grid: CellType[][],
+  endpoint: 'start' | 'end'
+): [number, number] | null => {
+  for (let rowIndex = 0; rowIndex < grid.length; rowIndex++) {
+    for (let cellIndex = 0; cellIndex < grid[rowIndex].length; cellIndex++) {
+      if (grid[rowIndex][cellIndex] === endpoint) {
+        return [rowIndex, cellIndex];
+      }
+    }
+  }
+  return null;
+};
+
+export const resetVisitedCells = (setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>) => {
+  setGrid((prevGrid) =>
+    prevGrid.map((row) => row.map((cell) => (cell === 'visited' ? 'empty' : cell)))
+  );
+};
+
 export const setGridWithValue = (
   row: number,
   col: number,
@@ -35,49 +55,61 @@ export const setGridWithValue = (
 };
 
 const directions = [
-  [-1, 0],
   [0, 1],
+  [-1, 0],
   [1, 0],
   [0, -1],
 ];
 
-export const dfs = async (
+const copyAndResetVisitedCellsInGrid = (grid: CellType[][]): CellType[][] => {
+  return grid.map((row) => row.map((cell) => (cell === 'visited' ? 'empty' : cell)));
+};
+
+export const dfs = (
   grid: CellType[][],
   start: [number, number],
   end: [number, number],
   setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>
-): Promise<boolean> => {
+) => {
   const rows = grid.length;
   const cols = grid[0].length;
   const visited: boolean[][] = Array.from({ length: rows }, () =>
     Array.from({ length: cols }, () => false)
   );
 
-  const dfsRec = async (row: number, col: number) => {
+  const localGrid = copyAndResetVisitedCellsInGrid(grid);
+
+  const dfsRec = (row: number, col: number) => {
     if (row === end[0] && col === end[1]) return true;
 
     visited[row][col] = true;
-    setGridWithValue(row, col, 'visited', setGrid);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    if (localGrid[row][col] !== 'start') {
+      localGrid[row][col] = 'visited';
+      setGrid(grid.map((row) => [...row]));
+    }
 
     for (const [dirRow, dirCol] of directions) {
       const newRow = row + dirRow;
       const newCol = col + dirCol;
+
       if (
         newRow >= 0 &&
         newRow < rows &&
         newCol >= 0 &&
         newCol < cols &&
         !visited[newRow][newCol] &&
-        (grid[newRow][newCol] === 'empty' || grid[newRow][newCol] === 'end')
+        (localGrid[newRow][newCol] === 'empty' || localGrid[newRow][newCol] === 'end')
       ) {
-        if (await dfsRec(newRow, newCol)) {
+        if (dfsRec(newRow, newCol)) {
           return true;
         }
       }
     }
+
     return false;
   };
 
-  return dfsRec(start[0], start[1]);
+  const result = dfsRec(start[0], start[1]);
+
+  setGrid(localGrid);
 };
