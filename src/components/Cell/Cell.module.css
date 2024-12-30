@@ -25,6 +25,10 @@
   animation: gradientEffect 0.5s ease-in-out forwards; /* Durée et effet */
 }
 
+.path {
+  background-color: yellow;
+}
+
 @keyframes gradientEffect {
   0% {
     background-color: red; /* Couleur initiale */

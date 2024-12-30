@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { Box, Button, Flex } from '@mantine/core';
 import { SelectedAlgorithmContext } from '../AlgorithmSelector/AlgorithmSelector';
 import { Cell, CellType } from '../Cell/Cell';
-import { dfs, findCell, initializeGrid, setGridWithValue } from './Grid.helper';
+import { bfs, dfs, findCell, initializeGrid, setGridWithValue } from './Grid.helper';
 import classes from './Grid.module.css';
 
 interface GridProps {
@@ -61,7 +61,7 @@ export const Grid = (props: GridProps) => {
     setGrid(initializeGrid(rows, cols));
   };
 
-  const handleRunAlgorithm = async () => {
+  const handleRunAlgorithm = () => {
     const start = findCell(grid, 'start');
     const end = findCell(grid, 'end');
 
@@ -72,6 +72,10 @@ export const Grid = (props: GridProps) => {
 
     if (selectedAlgorithm === 'dfs') {
       dfs(grid, start, end, setGrid);
+    }
+
+    if (selectedAlgorithm === 'bfs') {
+      bfs(grid, start, end, setGrid);
     }
   };
 

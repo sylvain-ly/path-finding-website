@@ -1,7 +1,7 @@
 import { Box } from '@mantine/core';
 import classes from './Cell.module.css';
 
-export type CellType = 'empty' | 'start' | 'end' | 'obstacle' | 'visited';
+export type CellType = 'empty' | 'start' | 'end' | 'obstacle' | 'visited' | 'path';
 
 interface CellProps {
   row: number;
@@ -24,6 +24,8 @@ export const Cell = (props: CellProps) => {
         return `${classes.cell} ${classes.obstacle}`;
       case 'visited':
         return `${classes.cell} ${classes.visited}`;
+      case 'path':
+        return `${classes.cell} ${classes.path}`;
       default:
         return `${classes.cell} ${classes.empty}`;
     }
