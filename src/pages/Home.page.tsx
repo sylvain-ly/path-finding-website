@@ -1,15 +1,27 @@
-import { AlgorithmSelector } from '@/components/AlgorithmSelector/AlgorithmSelector';
+import { createContext, useState } from 'react';
+import {
+  AlgorithmSelector,
+  SelectedAlgorithmContext,
+} from '@/components/AlgorithmSelector/AlgorithmSelector';
+import { Cell } from '@/components/Cell/Cell';
+import { Grid } from '@/components/Grid/Grid';
 import { Header } from '@/components/Header/Header';
-import { ColorSchemeToggle } from '../components/ColorSchemeToggle/ColorSchemeToggle';
-import { Welcome } from '../components/Welcome/Welcome';
 
 export const HomePage = () => {
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('bfs');
+  const rows = 20;
+  const cols = 40;
+
   return (
     <>
-      {/* <Welcome />
-      <ColorSchemeToggle /> */}
       <Header />
-      <AlgorithmSelector />
+      <AlgorithmSelector
+        selectedAlgorithm={selectedAlgorithm}
+        setSelectedAlgorithm={setSelectedAlgorithm}
+      />
+      <SelectedAlgorithmContext.Provider value={selectedAlgorithm}>
+        <Grid rows={rows} cols={cols} />
+      </SelectedAlgorithmContext.Provider>
     </>
   );
 };

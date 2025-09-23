@@ -1,6 +1,10 @@
-import { useState } from 'react';
-import { Box } from '@mantine/core';
+import { useContext, useEffect, useState } from 'react';
+import { Box, Button, Flex } from '@mantine/core';
+import { bfs, dfs } from '../Algorithms';
+import { SelectedAlgorithmContext } from '../AlgorithmSelector/AlgorithmSelector';
 import { Cell, CellType } from '../Cell/Cell';
+import { findCell, initializeGrid, setGridWithValue } from './Grid.helper';
+import classes from './Grid.module.css';
 
 interface GridProps {
   rows: number;
@@ -8,40 +12,100 @@ interface GridProps {
 }
 
 export const Grid = (props: GridProps) => {
+  const selectedAlgorithm = useContext(SelectedAlgorithmContext);
   const { rows, cols } = props;
-  const [grid, setGrid] = useState<CellType[][]>(
-    Array.from({ length: rows }, () => Array.from({ length: cols }, () => 'empty'))
-  );
+  const [grid, setGrid] = useState<CellType[][]>(initializeGrid(rows, cols));
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [dragging, setDragging] = useState<'start' | 'end' | null>(null);
 
-  const handleCellClick = (row: number, col: number) => {
-    setGrid((prevGrid) => {
-      const newGrid = prevGrid.map((rowArray, rowIndex) =>
-        rowArray.map((cell, colIndex) => {
-          if (rowIndex === row && colIndex === col) {
-            return cell === 'obstacle' ? 'empty' : 'obstacle';
-          }
-          return cell;
-        })
+  const handleMouseDown = (row: number, col: number) => {
+    const currentCell = grid[row][col];
+    if (currentCell === 'start' || currentCell === 'end') {
+      setDragging(currentCell);
+    } else {
+      setIsMouseDown(true);
+      setGridWithValue(row, col, 'obstacle', setGrid);
+    }
+  };
+
+  const handleMouseEnter = (row: number, col: number) => {
+    if (dragging) {
+      setGrid((prevGrid) =>
+        prevGrid.map((rowArray, rowIndex) =>
+          rowArray.map((cell, colIndex) => {
+            if (rowIndex === row && colIndex === col) {
+              if (cell === 'start' || cell === 'end') {
+                return cell;
+              }
+              return dragging;
+            }
+            if (cell === dragging) {
+              return 'empty';
+            }
+            return cell;
+          })
+        )
       );
-      return newGrid;
-    });
+    } else if (isMouseDown) {
+      const currentCell = grid[row][col];
+      if (currentCell !== 'start' && currentCell !== 'end')
+        setGridWithValue(row, col, 'obstacle', setGrid);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsMouseDown(false);
+    setDragging(null);
+  };
+
+  const clearGrid = () => {
+    setGrid(initializeGrid(rows, cols));
+  };
+
+  const handleRunAlgorithm = () => {
+    const start = findCell(grid, 'start');
+    const end = findCell(grid, 'end');
+
+    if (!start || !end) {
+      alert('Start or End point is missing!');
+      return;
+    }
+
+    if (selectedAlgorithm === 'dfs') {
+      dfs(grid, start, end, setGrid);
+    }
+
+    if (selectedAlgorithm === 'bfs') {
+      bfs(grid, start, end, setGrid);
+    }
   };
 
   return (
-    <Box className="grid">
-      {grid.map((rowArray, rowIndex) => (
-        <div key={rowIndex} className="grid-row">
-          {rowArray.map((cellType, colIndex) => (
-            <Cell
-              key={`${rowIndex}-${colIndex}`}
-              row={rowIndex}
-              col={colIndex}
-              type={cellType}
-              onClick={handleCellClick}
-            />
-          ))}
-        </div>
-      ))}
-    </Box>
+    <div>
+      <Flex gap={12}>
+        <Button onClick={clearGrid} style={{ marginBottom: '10px' }}>
+          Clear Grid
+        </Button>
+        <Button onClick={handleRunAlgorithm} style={{ marginBottom: '10px' }}>
+          Visualize
+        </Button>
+      </Flex>
+      <Box className={classes.grid} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+        {grid.map((rowArray, rowIndex) => (
+          <div key={`row-${rowIndex}`} className={classes.gridRow}>
+            {rowArray.map((cellType, colIndex) => (
+              <Cell
+                key={`cell-${rowIndex}-${colIndex}`}
+                row={rowIndex}
+                col={colIndex}
+                type={cellType}
+                onMouseDown={handleMouseDown}
+                onMouseEnter={handleMouseEnter}
+              />
+            ))}
+          </div>
+        ))}
+      </Box>
+    </div>
   );
 };
