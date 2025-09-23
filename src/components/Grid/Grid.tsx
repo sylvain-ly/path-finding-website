@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from 'react';
 import { Box, Button, Flex } from '@mantine/core';
+import { bfs, dfs } from '../Algorithms';
 import { SelectedAlgorithmContext } from '../AlgorithmSelector/AlgorithmSelector';
 import { Cell, CellType } from '../Cell/Cell';
-import { bfs, dfs, findCell, initializeGrid, setGridWithValue } from './Grid.helper';
+import { findCell, initializeGrid, setGridWithValue } from './Grid.helper';
 import classes from './Grid.module.css';
 
 interface GridProps {
