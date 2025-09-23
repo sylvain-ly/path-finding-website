@@ -20,7 +20,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/yarn.lock'
       - name: Install dependencies
-        run: npm ci
+        run: npm
       - name: Run build
         run: npm run build
       - name: Run tests
