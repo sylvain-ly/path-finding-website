@@ -22,9 +22,9 @@ export const AlgorithmSelector = (props: AlgorithmSelectorProps) => {
     <Group>
       <Select
         label="Choose an Algorithm"
-        placeholder="Select an algorithm"
-        onChange={(value) => setSelectedAlgorithm(value || '')}
         data={algorithmOptions}
+        value={selectedAlgorithm}
+        onChange={(value) => setSelectedAlgorithm(value || '')}
       />
     </Group>
   );

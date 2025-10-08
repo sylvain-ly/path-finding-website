@@ -1,9 +1,8 @@
-import { createContext, useState } from 'react';
+import { useState } from 'react';
 import {
   AlgorithmSelector,
   SelectedAlgorithmContext,
 } from '@/components/AlgorithmSelector/AlgorithmSelector';
-import { Cell } from '@/components/Cell/Cell';
 import { Grid } from '@/components/Grid/Grid';
 import { Header } from '@/components/Header/Header';
 

@@ -162,3 +162,74 @@ export const bfs = async (
 
   return false;
 };
+
+/*------------------------------------------- Djikstras --------------------------------------------- */
+type Coord = [number, number];
+
+export const djikstras = async (
+  grid: CellType[][],
+  start: Coord,
+  end: Coord,
+  setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>
+): Promise<boolean> => {
+  const rows = grid.length;
+  const cols = grid[0].length;
+
+  const visited = initializeVisitedArray(rows, cols);
+  const predecessors: (Coord | null)[][] = initializePredecessorsArray(rows, cols);
+  const dist: number[][] = Array.from({ length: rows }, () => Array(cols).fill(Infinity));
+
+  visited[start[0]][start[1]] = true;
+  dist[start[0]][start[1]] = 0;
+
+  const queue: Coord[] = [start];
+  let head = 0;
+
+  const paintVisited = async (r: number, c: number) => {
+    setGrid((prev) => {
+      const next = prev.map((row) => row.slice()); // nouvelles références (immutabilité)
+      const isStart = r === start[0] && c === start[1];
+      const isEnd = r === end[0] && c === end[1];
+      if (!isStart && !isEnd) {
+        next[r][c] = 'visited';
+      }
+      return next;
+    });
+
+    // requestAnimationFrame est souvent plus fiable que un très petit setTimeout
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  };
+
+  while (head < queue.length) {
+    const [r, c] = queue[head++];
+
+    if (r === end[0] && c === end[1]) {
+      await tracePath(r, c, predecessors, setGrid);
+      return true;
+    }
+
+    for (const [dr, dc] of directions) {
+      const nr = r + dr,
+        nc = c + dc;
+      if (!isValidCell(nr, nc, grid, visited)) continue;
+
+      const alt = dist[r][c] + 1;
+      if (alt < dist[nr][nc]) {
+        dist[nr][nc] = alt;
+        predecessors[nr][nc] = [r, c];
+
+        if (!visited[nr][nc]) {
+          visited[nr][nc] = true;
+          queue.push([nr, nc]);
+          await paintVisited(nr, nc);
+        }
+      }
+    }
+  }
+
+  return false;
+};
+
+const newFunction = ()=>{
+  return
+}

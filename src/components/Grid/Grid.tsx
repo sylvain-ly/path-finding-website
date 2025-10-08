@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { Box, Button, Flex } from '@mantine/core';
-import { bfs, dfs } from '../Algorithms';
+import { bfs, dfs, djikstras } from '../Algorithms';
 import { SelectedAlgorithmContext } from '../AlgorithmSelector/AlgorithmSelector';
 import { Cell, CellType } from '../Cell/Cell';
 import { findCell, initializeGrid, setGridWithValue } from './Grid.helper';
@@ -77,6 +77,10 @@ export const Grid = (props: GridProps) => {
 
     if (selectedAlgorithm === 'bfs') {
       bfs(grid, start, end, setGrid);
+    }
+
+    if (selectedAlgorithm === 'dijkstra') {
+      djikstras(grid, start, end, setGrid);
     }
   };
 
