@@ -230,6 +230,130 @@ export const djikstras = async (
   return false;
 };
 
-const newFunction = ()=>{
-  return
+/*------------------------------------------- A* --------------------------------------------- */
+const manhattan = (a: Coord, b: Coord): number => {
+  const dx = Math.abs(a[0] - b[0]);
+  const dy = Math.abs(a[1] - b[1]);
+  return dx + dy;
+};
+
+class MinHeap {
+  private a: { f: number; h: number; r: number; c: number }[] = [];
+  get size() {
+    return this.a.length;
+  }
+  push(x: { f: number; h: number; r: number; c: number }) {
+    this.a.push(x);
+    this.up(this.a.length - 1);
+  }
+  pop(): { f: number; h: number; r: number; c: number } | undefined {
+    if (!this.a.length) return undefined;
+    const top = this.a[0];
+    const last = this.a.pop()!;
+    if (this.a.length) {
+      this.a[0] = last;
+      this.down(0);
+    }
+    return top;
+  }
+  private less(i: number, j: number) {
+    if (this.a[i].f !== this.a[j].f) return this.a[i].f < this.a[j].f;
+    return this.a[i].h < this.a[j].h; // tie-break sur h
+  }
+  private up(i: number) {
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (this.less(p, i)) break;
+      [this.a[p], this.a[i]] = [this.a[i], this.a[p]];
+      i = p;
+    }
+  }
+  private down(i: number) {
+    const n = this.a.length;
+    while (true) {
+      let m = i;
+      const l = (i << 1) + 1,
+        r = l + 1;
+      if (l < n && !this.less(m, l)) m = l;
+      if (r < n && !this.less(m, r)) m = r;
+      if (m === i) break;
+      [this.a[m], this.a[i]] = [this.a[i], this.a[m]];
+      i = m;
+    }
+  }
 }
+
+export const astar = async (
+  grid: CellType[][],
+  start: Coord,
+  end: Coord,
+  setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>
+): Promise<boolean> => {
+  const rows = grid.length;
+  const cols = grid[0].length;
+
+  const inBounds = (r: number, c: number) => r >= 0 && r < rows && c >= 0 && c < cols;
+
+  // A* state
+  const closed: boolean[][] = initializeVisitedArray(rows, cols); // ensemble fermé
+  const predecessors: (Coord | null)[][] = initializePredecessorsArray(rows, cols);
+  const g: number[][] = Array.from({ length: rows }, () => Array(cols).fill(Infinity));
+  g[start[0]][start[1]] = 0;
+
+  // open set (tas sur f)
+  const heap = new MinHeap();
+  const h0 = manhattan(start, end);
+  heap.push({ f: h0, h: h0, r: start[0], c: start[1] });
+
+  // 4 directions (haut, bas, gauche, droite)
+  const dirs: Coord[] = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ];
+
+  const paintVisited = async (r: number, c: number) => {
+    setGrid((prev) => {
+      const next = prev.map((row) => row.slice()); // immutabilité
+      const isStart = r === start[0] && c === start[1];
+      const isEnd = r === end[0] && c === end[1];
+      if (!isStart && !isEnd) next[r][c] = 'visited'; // adapte selon ton CellType
+      return next;
+    });
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve())); // tu peux remplacer par requestAnimationFrame si tu préfères
+  };
+
+  while (heap.size) {
+    const cur = heap.pop()!;
+    const { r, c } = cur;
+
+    if (closed[r][c]) continue; // déjà traité
+    closed[r][c] = true;
+
+    if (r === end[0] && c === end[1]) {
+      await tracePath(r, c, predecessors, setGrid);
+      return true;
+    }
+
+    for (const [dr, dc] of dirs) {
+      const nr = r + dr,
+        nc = c + dc;
+      if (!inBounds(nr, nc)) continue;
+      if (!isValidCell(nr, nc, grid, closed)) continue; // impassable ou déjà fermé ?
+
+      const tentativeG = g[r][c] + 1; // coût uniforme 1
+      if (tentativeG < g[nr][nc]) {
+        g[nr][nc] = tentativeG;
+        predecessors[nr][nc] = [r, c];
+        const h = manhattan([nr, nc], end);
+        const f = tentativeG + h;
+        heap.push({ f, h, r: nr, c: nc });
+
+        await paintVisited(nr, nc);
+      }
+    }
+  }
+
+  return false; // pas de chemin
+};

@@ -1,7 +1,18 @@
-import { createContext } from 'react';
-import { Group, Select } from '@mantine/core';
+import { createContext, useContext } from 'react';
+import { Flex, Select, Text } from '@mantine/core';
 
-export const SelectedAlgorithmContext = createContext<string | undefined>(undefined);
+type Ctx = {
+  selectedAlgorithm: string;
+  setSelectedAlgorithm: (a: string) => void;
+};
+
+export const SelectedAlgorithmContext = createContext<Ctx | null>(null);
+
+export const useSelectedAlgorithm = () => {
+  const ctx = useContext(SelectedAlgorithmContext);
+  if (!ctx) throw new Error('useSelectedAlgorithm must be used within provider');
+  return ctx;
+};
 
 interface AlgorithmSelectorProps {
   selectedAlgorithm: string;
@@ -19,13 +30,11 @@ export const AlgorithmSelector = (props: AlgorithmSelectorProps) => {
   ];
 
   return (
-    <Group>
-      <Select
-        label="Choose an Algorithm"
-        data={algorithmOptions}
-        value={selectedAlgorithm}
-        onChange={(value) => setSelectedAlgorithm(value || '')}
-      />
-    </Group>
+    <Select
+      data={algorithmOptions}
+      value={selectedAlgorithm}
+      onChange={(value) => setSelectedAlgorithm(value || '')}
+      allowDeselect={false}
+    />
   );
 };
