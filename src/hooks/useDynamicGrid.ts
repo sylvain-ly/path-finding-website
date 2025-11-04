@@ -32,5 +32,5 @@ export const useDynamicGrid = (
     return () => window.removeEventListener('resize', updateSize);
   }, [CELL_SIZE, ml, mb]);
 
-  return { gridSize: gridSize, ml: ml, mb: mb };
+  return { gridSize, ml, mb };
 };

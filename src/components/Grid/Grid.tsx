@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
-import { Box, Button, Flex } from '@mantine/core';
+import { Box } from '@mantine/core';
 import { astar, bfs, dfs, djikstras } from '../Algorithms';
 import { useSelectedAlgorithm } from '../AlgorithmSelector/AlgorithmSelector';
 import { Cell, CellType } from '../Cell/Cell';
@@ -32,7 +32,9 @@ export const Grid = forwardRef<GridHandle, GridProps>((props: GridProps, ref) =>
   }, [rows, cols]);
 
   useEffect(() => {
-    if (!mazePattern) return;
+    if (!mazePattern) {
+      return;
+    }
 
     (async () => {
       try {
@@ -62,7 +64,9 @@ export const Grid = forwardRef<GridHandle, GridProps>((props: GridProps, ref) =>
   }, [mazePattern]);
 
   const handleMouseDown = (row: number, col: number) => {
-    if (isBusy) return;
+    if (isBusy) {
+      return;
+    }
     const currentCell = grid[row][col];
     if (currentCell === 'start' || currentCell === 'end') {
       setDragging(currentCell);
@@ -73,7 +77,9 @@ export const Grid = forwardRef<GridHandle, GridProps>((props: GridProps, ref) =>
   };
 
   const handleMouseEnter = (row: number, col: number) => {
-    if (isBusy) return;
+    if (isBusy) {
+      return;
+    }
     if (dragging) {
       setGrid((prevGrid) =>
         prevGrid.map((rowArray, rowIndex) =>
@@ -93,8 +99,9 @@ export const Grid = forwardRef<GridHandle, GridProps>((props: GridProps, ref) =>
       );
     } else if (isMouseDown) {
       const currentCell = grid[row][col];
-      if (currentCell !== 'start' && currentCell !== 'end')
+      if (currentCell !== 'start' && currentCell !== 'end') {
         setGridWithValue(row, col, 'obstacle', setGrid);
+      }
     }
   };
 
@@ -104,26 +111,34 @@ export const Grid = forwardRef<GridHandle, GridProps>((props: GridProps, ref) =>
   };
 
   const clearGrid = useCallback(() => {
-    if (isBusy) return;
+    if (isBusy) {
+      return;
+    }
     setGrid(initializeGrid(rows, cols));
   }, [rows, cols]);
 
   const runAlgorithm = useCallback(() => {
-    if (isBusy) return;
+    if (isBusy) {
+      return;
+    }
     const start = findCell(grid, 'start');
     const end = findCell(grid, 'end');
-    const speedNumber = parseInt(speed);
+    const speedNumber = parseInt(speed, 10);
 
     if (!start || !end) {
-      alert('Start or End point is missing!');
       return;
     }
     try {
       setIsBusy(true);
-      if (selectedAlgorithm === 'bfs') bfs(grid, start, end, setGrid, speedNumber);
-      else if (selectedAlgorithm === 'dfs') dfs(grid, start, end, setGrid, speedNumber);
-      else if (selectedAlgorithm === 'dijkstra') djikstras(grid, start, end, setGrid, speedNumber);
-      else if (selectedAlgorithm === 'astar') astar(grid, start, end, setGrid, speedNumber);
+      if (selectedAlgorithm === 'bfs') {
+        bfs(grid, start, end, setGrid, speedNumber);
+      } else if (selectedAlgorithm === 'dfs') {
+        dfs(grid, start, end, setGrid, speedNumber);
+      } else if (selectedAlgorithm === 'dijkstra') {
+        djikstras(grid, start, end, setGrid, speedNumber);
+      } else if (selectedAlgorithm === 'astar') {
+        astar(grid, start, end, setGrid, speedNumber);
+      }
     } finally {
       setIsBusy(false);
     }

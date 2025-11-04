@@ -10,14 +10,12 @@ export const HomePage = () => {
   const [speed, setSpeed] = useState<string>('1');
   const [mazePattern, setMazePattern] = useState<string>('');
   const gridRef = useRef<GridHandle>(null);
-  const { gridSize, ml, mb } = useDynamicGrid(100);
+  const { gridSize, ml } = useDynamicGrid(100);
   const { rows, cols } = gridSize;
 
   return (
     <>
-      <SelectedAlgorithmContext.Provider
-        value={{ selectedAlgorithm: selectedAlgorithm, setSelectedAlgorithm: setSelectedAlgorithm }}
-      >
+      <SelectedAlgorithmContext.Provider value={{ selectedAlgorithm, setSelectedAlgorithm }}>
         <Header
           clearGrid={() => gridRef.current?.clearGrid()}
           runAlgorithm={() => gridRef.current?.runAlgorithm()}
