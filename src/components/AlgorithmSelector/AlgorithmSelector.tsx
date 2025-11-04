@@ -10,7 +10,9 @@ export const SelectedAlgorithmContext = createContext<Ctx | null>(null);
 
 export const useSelectedAlgorithm = () => {
   const ctx = useContext(SelectedAlgorithmContext);
-  if (!ctx) {throw new Error('useSelectedAlgorithm must be used within provider');}
+  if (!ctx) {
+    throw new Error('useSelectedAlgorithm must be used within provider');
+  }
   return ctx;
 };
 
