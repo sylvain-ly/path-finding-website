@@ -31,6 +31,7 @@ export const AlgorithmSelector = (props: AlgorithmSelectorProps) => {
 
   return (
     <Select
+      label={'Choose your algorithm'}
       data={algorithmOptions}
       value={selectedAlgorithm}
       onChange={(value) => setSelectedAlgorithm(value || '')}

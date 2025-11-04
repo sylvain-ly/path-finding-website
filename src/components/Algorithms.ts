@@ -8,7 +8,7 @@ const directions = [
   [0, -1],
 ];
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
 const isValidCell = (
   row: number,
@@ -61,68 +61,49 @@ const tracePath = async (
 
   for (const [row, col] of reversedPath.reverse().slice(1, -1)) {
     setGridWithValue(row, col, 'path', setGrid);
-    await delay(1);
+    await nextFrame();
   }
 };
 
-/*------------------------------------------- DFS --------------------------------------------- */
-export const dfs = async (
+/*------------------------------------------- BFS --------------------------------------------- */
+function* bfsVisits(
   grid: CellType[][],
   start: [number, number],
   end: [number, number],
-  setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>
-): Promise<boolean> => {
-  const rows = grid.length;
-  const cols = grid[0].length;
-  const localGrid = copyAndResetVisitedCellsInGrid(grid);
-  const visited: boolean[][] = initializeVisitedArray(rows, cols);
+  visited: boolean[][],
+  predecessors: ([number, number] | null)[][]
+): Generator<[number, number], boolean, void> {
+  const queue: [number, number][] = [start];
+  let head = 0;
+  visited[start[0]][start[1]] = true;
 
-  const dfsRec = async (
-    row: number,
-    col: number,
-    predecessors: ([number, number] | null)[][]
-  ): Promise<boolean> => {
-    if (row === end[0] && col === end[1]) return true;
+  while (head < queue.length) {
+    const [row, col] = queue[head++];
 
-    visited[row][col] = true;
-    if (localGrid[row][col] !== 'start') {
-      localGrid[row][col] = 'visited';
-      setGrid(localGrid.map((row) => [...row]));
-      await delay(1);
+    if (row === end[0] && col === end[1]) {
+      return true;
     }
 
-    for (const [dirRow, dirCol] of directions) {
-      const newRow = row + dirRow;
-      const newCol = col + dirCol;
-
-      if (isValidCell(newRow, newCol, localGrid, visited)) {
-        predecessors[newRow][newCol] = [row, col];
-        if (await dfsRec(newRow, newCol, predecessors)) {
-          return true;
-        }
+    for (const [dr, dc] of directions) {
+      const nr = row + dr,
+        nc = col + dc;
+      if (isValidCell(nr, nc, grid, visited)) {
+        visited[nr][nc] = true;
+        predecessors[nr][nc] = [row, col];
+        queue.push([nr, nc]);
+        yield [nr, nc];
       }
     }
-
-    return false;
-  };
-
-  const predecessors = initializePredecessorsArray(rows, cols);
-  const isPathFound = await dfsRec(start[0], start[1], predecessors);
-
-  if (isPathFound) {
-    let currentRow = end[0];
-    let currentCol = end[1];
-    await tracePath(currentRow, currentCol, predecessors, setGrid);
   }
   return false;
-};
-/*------------------------------------------- BFS --------------------------------------------- */
+}
 
 export const bfs = async (
   grid: CellType[][],
   start: [number, number],
   end: [number, number],
-  setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>
+  setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>,
+  cellsPerFrame = 1
 ): Promise<boolean> => {
   const rows = grid.length;
   const cols = grid[0].length;
@@ -130,230 +111,389 @@ export const bfs = async (
   const visited = initializeVisitedArray(rows, cols);
   const predecessors = initializePredecessorsArray(rows, cols);
 
-  const queue: [number, number][] = [start];
-  visited[start[0]][start[1]] = true;
+  const gen = bfsVisits(grid, start, end, visited, predecessors);
 
-  while (queue.length > 0) {
-    const [row, col] = queue.shift()!;
+  let done = false;
+  let gridSnap = grid;
 
-    if (row === end[0] && col === end[1]) {
-      await tracePath(row, col, predecessors, setGrid);
-      return true;
-    }
-
-    for (const [dirRow, dirCol] of directions) {
-      const newRow = row + dirRow;
-      const newCol = col + dirCol;
-
-      if (isValidCell(newRow, newCol, grid, visited)) {
-        visited[newRow][newCol] = true;
-        predecessors[newRow][newCol] = [row, col];
-        queue.push([newRow, newCol]);
-
-        if (newRow !== end[0] || newCol !== end[1]) {
-          grid[newRow][newCol] = 'visited';
-        }
-
-        setGrid(grid.map((row) => [...row])); // crée une nouvelle référence des tableaux de cellules pour chaque rows donc c'est carré
-        await delay(1);
+  while (!done) {
+    for (let i = 0; i < cellsPerFrame; i++) {
+      const step = gen.next();
+      if (step.done) {
+        done = true;
+        break;
       }
+      const [r, c] = step.value;
+      if (r !== end[0] || c !== end[1]) {
+        gridSnap = gridSnap.map((row) => row.slice());
+        gridSnap[r][c] = 'visited';
+        setGrid(gridSnap);
+      }
+    }
+    await nextFrame();
+  }
+
+  if (visited[end[0]][end[1]]) {
+    await tracePath(end[0], end[1], predecessors, setGrid);
+    return true;
+  }
+  return false;
+};
+
+/*------------------------------------------- DFS --------------------------------------------- */
+function* dfsRecGen(
+  grid: CellType[][],
+  row: number,
+  col: number,
+  end: [number, number],
+  visited: boolean[][],
+  predecessors: ([number, number] | null)[][]
+): Generator<[number, number], boolean, void> {
+  visited[row][col] = true;
+  yield [row, col];
+
+  if (row === end[0] && col === end[1]) {
+    return true;
+  }
+
+  for (const [dr, dc] of directions) {
+    const nr = row + dr;
+    const nc = col + dc;
+
+    if (isValidCell(nr, nc, grid, visited)) {
+      predecessors[nr][nc] = [row, col];
+      const found = yield* dfsRecGen(grid, nr, nc, end, visited, predecessors);
+      if (found) return true;
     }
   }
 
   return false;
-};
+}
 
-/*------------------------------------------- Djikstras --------------------------------------------- */
-type Coord = [number, number];
-
-export const djikstras = async (
+export async function dfs(
   grid: CellType[][],
-  start: Coord,
-  end: Coord,
-  setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>
-): Promise<boolean> => {
+  start: [number, number],
+  end: [number, number],
+  setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>,
+  cellsPerFrame = 1
+): Promise<boolean> {
   const rows = grid.length;
   const cols = grid[0].length;
 
   const visited = initializeVisitedArray(rows, cols);
-  const predecessors: (Coord | null)[][] = initializePredecessorsArray(rows, cols);
-  const dist: number[][] = Array.from({ length: rows }, () => Array(cols).fill(Infinity));
+  const predecessors = initializePredecessorsArray(rows, cols);
+  const gen = dfsRecGen(grid, start[0], start[1], end, visited, predecessors);
 
-  visited[start[0]][start[1]] = true;
-  dist[start[0]][start[1]] = 0;
+  let done = false;
+  let gridSnap = grid;
 
-  const queue: Coord[] = [start];
-  let head = 0;
+  while (!done) {
+    for (let i = 0; i < cellsPerFrame; i++) {
+      const step = gen.next();
 
-  const paintVisited = async (r: number, c: number) => {
-    setGrid((prev) => {
-      const next = prev.map((row) => row.slice()); // nouvelles références (immutabilité)
-      const isStart = r === start[0] && c === start[1];
-      const isEnd = r === end[0] && c === end[1];
-      if (!isStart && !isEnd) {
-        next[r][c] = 'visited';
+      if (step.done) {
+        done = true;
+        break;
       }
-      return next;
-    });
 
-    // requestAnimationFrame est souvent plus fiable que un très petit setTimeout
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-  };
+      const [r, c] = step.value;
 
-  while (head < queue.length) {
-    const [r, c] = queue[head++];
+      if (gridSnap[r][c] !== 'start' && gridSnap[r][c] !== 'end' && gridSnap[r][c] !== 'path') {
+        gridSnap = gridSnap.map((row) => row.slice());
+        gridSnap[r][c] = 'visited';
+        setGrid(gridSnap);
+      }
+    }
+
+    await nextFrame();
+  }
+
+  if (visited[end[0]][end[1]]) {
+    await tracePath(end[0], end[1], predecessors, setGrid);
+    return true;
+  }
+
+  return false;
+}
+/*------------------------------------------- Djikstras --------------------------------------------- */
+type Coord = [number, number];
+
+export class MinHeap<T> {
+  private a: T[] = [];
+  private less: (x: T, y: T) => boolean;
+
+  constructor(less: (x: T, y: T) => boolean) {
+    this.less = less;
+  }
+
+  get size(): number {
+    return this.a.length;
+  }
+  isEmpty(): boolean {
+    return this.a.length === 0;
+  }
+  peek(): T | undefined {
+    return this.a[0];
+  }
+  clear(): void {
+    this.a.length = 0;
+  }
+
+  push(x: T): void {
+    const a = this.a;
+    a.push(x);
+    // sift-up
+    let i = a.length - 1;
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (!this.less(a[i], a[p])) break; // parent <= enfant
+      [a[i], a[p]] = [a[p], a[i]];
+      i = p;
+    }
+  }
+
+  pop(): T | undefined {
+    const a = this.a;
+    if (a.length === 0) return undefined;
+    const top = a[0];
+    const x = a.pop()!;
+    if (a.length) {
+      a[0] = x;
+      // shift-down
+      let i = 0;
+      while (true) {
+        let s = i;
+        const l = i * 2 + 1;
+        const r = l + 1;
+        if (l < a.length && this.less(a[l], a[s])) s = l;
+        if (r < a.length && this.less(a[r], a[s])) s = r;
+        if (s === i) break;
+        [a[i], a[s]] = [a[s], a[i]];
+        i = s;
+      }
+    }
+    return top;
+  }
+}
+
+type DItem = { r: number; c: number; g: number };
+const dijkstraLess = (x: DItem, y: DItem) => x.g < y.g;
+
+// ---- Générateur : yield chaque noeud définitivement extrait (settled)
+export function* dijkstraVisits(
+  grid: CellType[][],
+  start: Coord,
+  end: Coord,
+  predecessors: (Coord | null)[][]
+): Generator<Coord, boolean, void> {
+  const rows = grid.length,
+    cols = grid[0].length;
+
+  const inBounds = (r: number, c: number) => r >= 0 && c >= 0 && r < rows && c < cols;
+
+  // distances + ensemble "settled" (noeuds fixés)
+  const dist: number[][] = Array.from({ length: rows }, () => Array(cols).fill(Infinity));
+  const settled: boolean[][] = Array.from({ length: rows }, () => Array(cols).fill(false));
+
+  const heap = new MinHeap<DItem>(dijkstraLess);
+  dist[start[0]][start[1]] = 0;
+  heap.push({ r: start[0], c: start[1], g: 0 });
+
+  while (!heap.isEmpty()) {
+    const cur = heap.pop()!;
+    const { r, c, g } = cur;
+
+    // Ignore les entrées périmées ou déjà fixées
+    if (settled[r][c] || g !== dist[r][c]) continue;
+
+    // On "fixe" (settle) ce noeud : moment idéal pour l'afficher
+    settled[r][c] = true;
+    yield [r, c];
 
     if (r === end[0] && c === end[1]) {
-      await tracePath(r, c, predecessors, setGrid);
       return true;
     }
 
     for (const [dr, dc] of directions) {
       const nr = r + dr,
         nc = c + dc;
-      if (!isValidCell(nr, nc, grid, visited)) continue;
+      if (!inBounds(nr, nc)) continue;
+      if (grid[nr][nc] === 'obstacle' || settled[nr][nc]) continue;
 
       const alt = dist[r][c] + 1;
       if (alt < dist[nr][nc]) {
         dist[nr][nc] = alt;
         predecessors[nr][nc] = [r, c];
-
-        if (!visited[nr][nc]) {
-          visited[nr][nc] = true;
-          queue.push([nr, nc]);
-          await paintVisited(nr, nc);
-        }
+        heap.push({ r: nr, c: nc, g: alt });
       }
     }
   }
 
   return false;
-};
-
-/*------------------------------------------- A* --------------------------------------------- */
-const manhattan = (a: Coord, b: Coord): number => {
-  const dx = Math.abs(a[0] - b[0]);
-  const dy = Math.abs(a[1] - b[1]);
-  return dx + dy;
-};
-
-class MinHeap {
-  private a: { f: number; h: number; r: number; c: number }[] = [];
-  get size() {
-    return this.a.length;
-  }
-  push(x: { f: number; h: number; r: number; c: number }) {
-    this.a.push(x);
-    this.up(this.a.length - 1);
-  }
-  pop(): { f: number; h: number; r: number; c: number } | undefined {
-    if (!this.a.length) return undefined;
-    const top = this.a[0];
-    const last = this.a.pop()!;
-    if (this.a.length) {
-      this.a[0] = last;
-      this.down(0);
-    }
-    return top;
-  }
-  private less(i: number, j: number) {
-    if (this.a[i].f !== this.a[j].f) return this.a[i].f < this.a[j].f;
-    return this.a[i].h < this.a[j].h; // tie-break sur h
-  }
-  private up(i: number) {
-    while (i > 0) {
-      const p = (i - 1) >> 1;
-      if (this.less(p, i)) break;
-      [this.a[p], this.a[i]] = [this.a[i], this.a[p]];
-      i = p;
-    }
-  }
-  private down(i: number) {
-    const n = this.a.length;
-    while (true) {
-      let m = i;
-      const l = (i << 1) + 1,
-        r = l + 1;
-      if (l < n && !this.less(m, l)) m = l;
-      if (r < n && !this.less(m, r)) m = r;
-      if (m === i) break;
-      [this.a[m], this.a[i]] = [this.a[i], this.a[m]];
-      i = m;
-    }
-  }
 }
 
-export const astar = async (
+export async function djikstras(
   grid: CellType[][],
   start: Coord,
   end: Coord,
-  setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>
-): Promise<boolean> => {
-  const rows = grid.length;
-  const cols = grid[0].length;
+  setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>,
+  cellsPerFrame = 1
+): Promise<boolean> {
+  const rows = grid.length,
+    cols = grid[0].length;
 
-  const inBounds = (r: number, c: number) => r >= 0 && r < rows && c >= 0 && c < cols;
+  const predecessors: (Coord | null)[][] = Array.from({ length: rows }, () =>
+    Array(cols).fill(null)
+  );
 
-  // A* state
-  const closed: boolean[][] = initializeVisitedArray(rows, cols); // ensemble fermé
-  const predecessors: (Coord | null)[][] = initializePredecessorsArray(rows, cols);
-  const g: number[][] = Array.from({ length: rows }, () => Array(cols).fill(Infinity));
-  g[start[0]][start[1]] = 0;
+  const gen = dijkstraVisits(grid, start, end, predecessors);
+  const nextFrame = () => new Promise<void>((res) => requestAnimationFrame(() => res()));
 
-  // open set (tas sur f)
-  const heap = new MinHeap();
-  const h0 = manhattan(start, end);
-  heap.push({ f: h0, h: h0, r: start[0], c: start[1] });
+  let done = false;
+  let found = false;
+  let gridSnap = grid;
 
-  // 4 directions (haut, bas, gauche, droite)
-  const dirs: Coord[] = [
-    [-1, 0],
-    [1, 0],
-    [0, -1],
-    [0, 1],
-  ];
+  while (!done) {
+    for (let i = 0; i < cellsPerFrame; i++) {
+      const step = gen.next();
+      if (step.done) {
+        done = true;
+        found = step.value === true;
+        break;
+      }
+      const [r, c] = step.value;
 
-  const paintVisited = async (r: number, c: number) => {
-    setGrid((prev) => {
-      const next = prev.map((row) => row.slice()); // immutabilité
       const isStart = r === start[0] && c === start[1];
       const isEnd = r === end[0] && c === end[1];
-      if (!isStart && !isEnd) next[r][c] = 'visited'; // adapte selon ton CellType
-      return next;
-    });
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve())); // tu peux remplacer par requestAnimationFrame si tu préfères
-  };
+      if (!isStart && !isEnd) {
+        // clone structurel minimal puis peinture
+        gridSnap = gridSnap.map((row) => row.slice());
+        if (gridSnap[r][c] !== 'path') gridSnap[r][c] = 'visited';
+        setGrid(gridSnap);
+      }
+    }
+    await nextFrame();
+  }
 
-  while (heap.size) {
+  if (found) {
+    await tracePath(end[0], end[1], predecessors, setGrid);
+    return true;
+  }
+  return false;
+}
+
+const manhattan = (a: Coord, b: Coord) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+
+// Comparateur pour A*: f minimal d'abord, puis h minimal en tie-break
+type AItem = { r: number; c: number; f: number; h: number };
+const aStarLess = (x: AItem, y: AItem) => x.f < y.f || (x.f === y.f && x.h < y.h);
+
+// directions (adapte si tu as déjà une constante globale)
+
+// --- Générateur : yield chaque nœud "fermé" (définitivement choisi) ---
+export function* astarVisits(
+  grid: CellType[][],
+  start: Coord,
+  end: Coord,
+  predecessors: (Coord | null)[][]
+): Generator<Coord, boolean, void> {
+  const rows = grid.length,
+    cols = grid[0].length;
+  const inBounds = (r: number, c: number) => r >= 0 && r < rows && c >= 0 && c < cols;
+
+  const g: number[][] = Array.from({ length: rows }, () => Array(cols).fill(Infinity));
+  const closed: boolean[][] = Array.from({ length: rows }, () => Array(cols).fill(false));
+
+  const heap = new MinHeap<AItem>(aStarLess);
+
+  g[start[0]][start[1]] = 0;
+  const h0 = manhattan(start, end);
+  heap.push({ r: start[0], c: start[1], f: h0, h: h0 });
+
+  while (!heap.isEmpty()) {
     const cur = heap.pop()!;
-    const { r, c } = cur;
+    const { r, c, f } = cur;
 
-    if (closed[r][c]) continue; // déjà traité
+    // Skip si déjà fermé
+    if (closed[r][c]) continue;
+
+    // Skip si entrée obsolète (meilleure g connue depuis)
+    const expectedF = g[r][c] + manhattan([r, c], end);
+    if (f !== expectedF) continue;
+
+    // On "ferme" ce nœud : moment idéal pour publier/afficher
     closed[r][c] = true;
+    yield [r, c];
 
     if (r === end[0] && c === end[1]) {
-      await tracePath(r, c, predecessors, setGrid);
       return true;
     }
 
-    for (const [dr, dc] of dirs) {
+    for (const [dr, dc] of directions) {
       const nr = r + dr,
         nc = c + dc;
       if (!inBounds(nr, nc)) continue;
-      if (!isValidCell(nr, nc, grid, closed)) continue; // impassable ou déjà fermé ?
+      if (grid[nr][nc] === 'obstacle' || closed[nr][nc]) continue;
 
-      const tentativeG = g[r][c] + 1; // coût uniforme 1
+      const tentativeG = g[r][c] + 1;
       if (tentativeG < g[nr][nc]) {
         g[nr][nc] = tentativeG;
         predecessors[nr][nc] = [r, c];
         const h = manhattan([nr, nc], end);
-        const f = tentativeG + h;
-        heap.push({ f, h, r: nr, c: nc });
-
-        await paintVisited(nr, nc);
+        const nf = tentativeG + h;
+        heap.push({ r: nr, c: nc, f: nf, h });
       }
     }
   }
 
-  return false; // pas de chemin
-};
+  return false;
+}
+
+export async function astar(
+  grid: CellType[][],
+  start: Coord,
+  end: Coord,
+  setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>,
+  cellsPerFrame = 1
+): Promise<boolean> {
+  const rows = grid.length,
+    cols = grid[0].length;
+  const predecessors: (Coord | null)[][] = Array.from({ length: rows }, () =>
+    Array(cols).fill(null)
+  );
+
+  const gen = astarVisits(grid, start, end, predecessors);
+  const nextFrame = () => new Promise<void>((res) => requestAnimationFrame(() => res()));
+
+  let done = false;
+  let found = false;
+  let gridSnap = grid;
+
+  while (!done) {
+    for (let i = 0; i < cellsPerFrame; i++) {
+      const step = gen.next();
+      if (step.done) {
+        done = true;
+        found = step.value === true;
+        break;
+      }
+
+      const [r, c] = step.value;
+      const isStart = r === start[0] && c === start[1];
+      const isEnd = r === end[0] && c === end[1];
+
+      if (!isStart && !isEnd) {
+        gridSnap = gridSnap.map((row) => row.slice());
+        if (gridSnap[r][c] !== 'path') gridSnap[r][c] = 'visited';
+        setGrid(gridSnap);
+      }
+    }
+    await nextFrame();
+  }
+
+  if (found) {
+    await tracePath(end[0], end[1], predecessors, setGrid);
+    return true;
+  }
+  return false;
+}
