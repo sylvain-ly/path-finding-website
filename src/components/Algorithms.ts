@@ -498,5 +498,54 @@ export async function astar(
   return false;
 }
 
+export async function astar2(
+  grid: CellType[][],
+  start: Coord,
+  end: Coord,
+  setGrid: React.Dispatch<React.SetStateAction<CellType[][]>>,
+  cellsPerFrame = 1
+): Promise<boolean> {
+  const rows = grid.length,
+    cols = grid[0].length;
+  const predecessors: (Coord | null)[][] = Array.from({ length: rows }, () =>
+    Array(cols).fill(null)
+  );
+
+  const gen = astarVisits(grid, start, end, predecessors);
+  const nextFrame = () => new Promise<void>((res) => requestAnimationFrame(() => res()));
+
+  let done = false;
+  let found = false;
+  let gridSnap = grid;
+
+  while (!done) {
+    for (let i = 0; i < cellsPerFrame; i++) {
+      const step = gen.next();
+      if (step.done) {
+        done = true;
+        found = step.value === true;
+        break;
+      }
+
+      const [r, c] = step.value;
+      const isStart = r === start[0] && c === start[1];
+      const isEnd = r === end[0] && c === end[1];
+
+      if (!isStart && !isEnd) {
+        gridSnap = gridSnap.map((row) => row.slice());
+        if (gridSnap[r][c] !== 'path') gridSnap[r][c] = 'visited';
+        setGrid(gridSnap);
+      }
+    }
+    await nextFrame();
+  }
+
+  if (found) {
+    await tracePath(end[0], end[1], predecessors, setGrid);
+    return true;
+  }
+  return false;
+}
+
 const triggerGithubAction = 0;
 // github action
