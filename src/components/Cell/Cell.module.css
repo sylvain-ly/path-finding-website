@@ -1,11 +1,11 @@
 .cell {
   position: relative;
-  width: 20px;
-  height: 20px;
-  border: 1px solid #ccc;
+  width: 25px;
+  height: 25px;
+  border: 0.5px solid #ccc;
   background-color: white; /* Couleur initiale */
   overflow: hidden; /* Empêche le pseudo-élément de dépasser */
-  transition: background-color 1s ease;
+  transition: background-color 0.5s ease;
 }
 
 .cell::after {
@@ -24,7 +24,7 @@
 }
 
 .start {
-  background-color: green;
+  background-color: aqua;
 }
 
 .end {
@@ -32,7 +32,7 @@
 }
 
 .obstacle {
-  background-color: gray;
+  background-color: rgb(12, 47, 63);
 }
 
 .empty {
@@ -58,6 +58,6 @@
     background-color: rgb(38, 38, 192);
   }
   100% {
-    background-color: rgb(49, 157, 184);
+    background-color: rgb(193, 206, 247);
   }
 }

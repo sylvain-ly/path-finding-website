@@ -1,24 +1,68 @@
-import { useContext, useEffect, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
 import { Box, Button, Flex } from '@mantine/core';
-import { bfs, dfs, djikstras } from '../Algorithms';
-import { SelectedAlgorithmContext } from '../AlgorithmSelector/AlgorithmSelector';
+import { astar, bfs, dfs, djikstras } from '../Algorithms';
+import { useSelectedAlgorithm } from '../AlgorithmSelector/AlgorithmSelector';
 import { Cell, CellType } from '../Cell/Cell';
+import { generateMazeSkewHorizontal, generateMazeSkewVertical } from '../MazeAlgorithms';
 import { findCell, initializeGrid, setGridWithValue } from './Grid.helper';
 import classes from './Grid.module.css';
 
 interface GridProps {
   rows: number;
   cols: number;
+  speed: string;
+  mazePattern: string | null;
 }
 
-export const Grid = (props: GridProps) => {
-  const selectedAlgorithm = useContext(SelectedAlgorithmContext);
-  const { rows, cols } = props;
+export type GridHandle = {
+  clearGrid: () => void;
+  runAlgorithm: () => void | Promise<void>;
+};
+
+export const Grid = forwardRef<GridHandle, GridProps>((props: GridProps, ref) => {
+  const { selectedAlgorithm } = useSelectedAlgorithm();
+  const { rows, cols, speed, mazePattern } = props;
   const [grid, setGrid] = useState<CellType[][]>(initializeGrid(rows, cols));
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [dragging, setDragging] = useState<'start' | 'end' | null>(null);
+  const [isBusy, setIsBusy] = useState(false);
+
+  useEffect(() => {
+    setGrid(initializeGrid(rows, cols));
+  }, [rows, cols]);
+
+  useEffect(() => {
+    if (!mazePattern) return;
+
+    (async () => {
+      try {
+        setIsBusy(true);
+
+        if (mazePattern === 'recursive division vertical skew') {
+          await generateMazeSkewVertical(
+            grid,
+            findCell(grid, 'start')!,
+            findCell(grid, 'end')!,
+            setGrid,
+            0.75
+          );
+        } else if (mazePattern === 'recursive division horizontal skew') {
+          await generateMazeSkewHorizontal(
+            grid,
+            findCell(grid, 'start')!,
+            findCell(grid, 'end')!,
+            setGrid,
+            0.75
+          );
+        }
+      } finally {
+        setIsBusy(false);
+      }
+    })();
+  }, [mazePattern]);
 
   const handleMouseDown = (row: number, col: number) => {
+    if (isBusy) return;
     const currentCell = grid[row][col];
     if (currentCell === 'start' || currentCell === 'end') {
       setDragging(currentCell);
@@ -29,6 +73,7 @@ export const Grid = (props: GridProps) => {
   };
 
   const handleMouseEnter = (row: number, col: number) => {
+    if (isBusy) return;
     if (dragging) {
       setGrid((prevGrid) =>
         prevGrid.map((rowArray, rowIndex) =>
@@ -58,42 +103,36 @@ export const Grid = (props: GridProps) => {
     setDragging(null);
   };
 
-  const clearGrid = () => {
+  const clearGrid = useCallback(() => {
+    if (isBusy) return;
     setGrid(initializeGrid(rows, cols));
-  };
+  }, [rows, cols]);
 
-  const handleRunAlgorithm = () => {
+  const runAlgorithm = useCallback(() => {
+    if (isBusy) return;
     const start = findCell(grid, 'start');
     const end = findCell(grid, 'end');
+    const speedNumber = parseInt(speed);
 
     if (!start || !end) {
       alert('Start or End point is missing!');
       return;
     }
-
-    if (selectedAlgorithm === 'dfs') {
-      dfs(grid, start, end, setGrid);
+    try {
+      setIsBusy(true);
+      if (selectedAlgorithm === 'bfs') bfs(grid, start, end, setGrid, speedNumber);
+      else if (selectedAlgorithm === 'dfs') dfs(grid, start, end, setGrid, speedNumber);
+      else if (selectedAlgorithm === 'dijkstra') djikstras(grid, start, end, setGrid, speedNumber);
+      else if (selectedAlgorithm === 'astar') astar(grid, start, end, setGrid, speedNumber);
+    } finally {
+      setIsBusy(false);
     }
+  }, [grid, selectedAlgorithm, speed, isBusy]);
 
-    if (selectedAlgorithm === 'bfs') {
-      bfs(grid, start, end, setGrid);
-    }
-
-    if (selectedAlgorithm === 'dijkstra') {
-      djikstras(grid, start, end, setGrid);
-    }
-  };
+  useImperativeHandle(ref, () => ({ clearGrid, runAlgorithm }), [clearGrid, runAlgorithm]);
 
   return (
     <div>
-      <Flex gap={12}>
-        <Button onClick={clearGrid} style={{ marginBottom: '10px' }}>
-          Clear Grid
-        </Button>
-        <Button onClick={handleRunAlgorithm} style={{ marginBottom: '10px' }}>
-          Visualize
-        </Button>
-      </Flex>
       <Box className={classes.grid} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
         {grid.map((rowArray, rowIndex) => (
           <div key={`row-${rowIndex}`} className={classes.gridRow}>
@@ -112,4 +151,4 @@ export const Grid = (props: GridProps) => {
       </Box>
     </div>
   );
-};
+});
