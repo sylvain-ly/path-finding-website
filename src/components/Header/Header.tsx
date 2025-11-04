@@ -1,4 +1,4 @@
-import { Button, Flex, Select, Text, Title } from '@mantine/core';
+import { Button, Flex, Select, Title } from '@mantine/core';
 import { AlgorithmSelector, useSelectedAlgorithm } from '../AlgorithmSelector/AlgorithmSelector';
 
 interface GridProps {

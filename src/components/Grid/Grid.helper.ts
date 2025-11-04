@@ -47,9 +47,3 @@ export const setGridWithValue = (
     )
   );
 };
-
-export const copyAndResetVisitedCellsInGrid = (grid: CellType[][]): CellType[][] => {
-  return grid.map((row) =>
-    row.map((cell) => (cell === 'visited' || cell === 'path' ? 'empty' : cell))
-  );
-};

@@ -1,5 +1,5 @@
 import { CellType } from './Cell/Cell';
-import { copyAndResetVisitedCellsInGrid, setGridWithValue } from './Grid/Grid.helper';
+import { setGridWithValue } from './Grid/Grid.helper';
 
 const directions = [
   [0, 1], // droite

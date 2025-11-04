@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
-import { Box, Button, Flex } from '@mantine/core';
+import { Box } from '@mantine/core';
 import { astar, bfs, dfs, djikstras } from '../Algorithms';
 import { useSelectedAlgorithm } from '../AlgorithmSelector/AlgorithmSelector';
 import { Cell, CellType } from '../Cell/Cell';
@@ -123,10 +123,9 @@ export const Grid = forwardRef<GridHandle, GridProps>((props: GridProps, ref) =>
     }
     const start = findCell(grid, 'start');
     const end = findCell(grid, 'end');
-    const speedNumber = parseInt(speed);
+    const speedNumber = parseInt(speed, 10);
 
     if (!start || !end) {
-      alert('Start or End point is missing!');
       return;
     }
     try {
