@@ -498,4 +498,5 @@ export async function astar(
   return false;
 }
 
+const triggerGithubAction = 0;
 // github action
