@@ -33,7 +33,7 @@ export const Cell = (props: CellProps) => {
 
   return (
     <Box
-      size={'xs'}
+      size="xs"
       className={getClassName()}
       onMouseDown={() => onMouseDown(row, col)}
       onMouseEnter={() => onMouseEnter(row, col)}

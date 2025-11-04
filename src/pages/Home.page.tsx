@@ -16,7 +16,7 @@ export const HomePage = () => {
   return (
     <>
       <SelectedAlgorithmContext.Provider
-        value={{ selectedAlgorithm: selectedAlgorithm, setSelectedAlgorithm: setSelectedAlgorithm }}
+        value={{ selectedAlgorithm, setSelectedAlgorithm }}
       >
         <Header
           clearGrid={() => gridRef.current?.clearGrid()}

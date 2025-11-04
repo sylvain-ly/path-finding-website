@@ -30,8 +30,8 @@ function pickOrientation(
   skewStrength = 0.7
 ): 'H' | 'V' {
   // Cas très rectangulaire : privilégier l'orientation qui coupe le plus court côté
-  if (width > height + 1) return 'V'; // plus large que haut → mur vertical
-  if (height > width + 1) return 'H'; // plus haut que large → mur horizontal
+  if (width > height + 1) {return 'V';} // plus large que haut → mur vertical
+  if (height > width + 1) {return 'H';} // plus haut que large → mur horizontal
 
   // Cas ambigu / proche du carré → appliquer le biais
   const pVertical = skew === 'vertical' ? skewStrength : 1 - skewStrength;
@@ -51,31 +51,31 @@ function buildRecursiveDivisionStepsSkew(
 
   // Bordure extérieure
   for (let c = 0; c < cols; c++) {
-    if (!isStartOrEnd(0, c, start, end)) steps.push([0, c]);
-    if (!isStartOrEnd(rows - 1, c, start, end)) steps.push([rows - 1, c]);
+    if (!isStartOrEnd(0, c, start, end)) {steps.push([0, c]);}
+    if (!isStartOrEnd(rows - 1, c, start, end)) {steps.push([rows - 1, c]);}
   }
   for (let r = 1; r < rows - 1; r++) {
-    if (!isStartOrEnd(r, 0, start, end)) steps.push([r, 0]);
-    if (!isStartOrEnd(r, cols - 1, start, end)) steps.push([r, cols - 1]);
+    if (!isStartOrEnd(r, 0, start, end)) {steps.push([r, 0]);}
+    if (!isStartOrEnd(r, cols - 1, start, end)) {steps.push([r, cols - 1]);}
   }
 
   const divide = (r0: number, c0: number, r1: number, c1: number) => {
     const height = r1 - r0 + 1;
     const width = c1 - c0 + 1;
-    if (height < 3 || width < 3) return;
+    if (height < 3 || width < 3) {return;}
 
     const orientation = pickOrientation(height, width, skew, skewStrength);
 
     if (orientation === 'H') {
       // Mur horizontal sur une ligne paire, ouverture sur colonne impaire
       const wallRow = randEven(r0 + 1, r1 - 1);
-      if (wallRow == null) return;
+      if (wallRow == null) {return;}
       const gapCol = randOdd(c0 + 1, c1 - 1);
-      if (gapCol == null) return;
+      if (gapCol == null) {return;}
 
       for (let c = c0; c <= c1; c++) {
-        if (c === gapCol) continue;
-        if (!isStartOrEnd(wallRow, c, start, end)) steps.push([wallRow, c]);
+        if (c === gapCol) {continue;}
+        if (!isStartOrEnd(wallRow, c, start, end)) {steps.push([wallRow, c]);}
       }
       // Recurse au-dessus et au-dessous
       divide(r0, c0, wallRow - 1, c1);
@@ -83,13 +83,13 @@ function buildRecursiveDivisionStepsSkew(
     } else {
       // Mur vertical sur une colonne paire, ouverture sur ligne impaire
       const wallCol = randEven(c0 + 1, c1 - 1);
-      if (wallCol == null) return;
+      if (wallCol == null) {return;}
       const gapRow = randOdd(r0 + 1, r1 - 1);
-      if (gapRow == null) return;
+      if (gapRow == null) {return;}
 
       for (let r = r0; r <= r1; r++) {
-        if (r === gapRow) continue;
-        if (!isStartOrEnd(r, wallCol, start, end)) steps.push([r, wallCol]);
+        if (r === gapRow) {continue;}
+        if (!isStartOrEnd(r, wallCol, start, end)) {steps.push([r, wallCol]);}
       }
       // Recurse à gauche et à droite
       divide(r0, c0, r1, wallCol - 1);
@@ -110,7 +110,7 @@ function softResetGrid(grid: CellType[][], start: Coord, end: Coord): CellType[]
     for (let c = 0; c < cols; c++) {
       const isS = r === start[0] && c === start[1];
       const isE = r === end[0] && c === end[1];
-      if (!isS && !isE) g[r][c] = 'empty';
+      if (!isS && !isE) {g[r][c] = 'empty';}
     }
   }
   return g;

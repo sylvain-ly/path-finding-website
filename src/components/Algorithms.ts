@@ -163,7 +163,7 @@ function* dfsRecGen(
     if (isValidCell(nr, nc, grid, visited)) {
       predecessors[nr][nc] = [row, col];
       const found = yield* dfsRecGen(grid, nr, nc, end, visited, predecessors);
-      if (found) return true;
+      if (found) {return true;}
     }
   }
 
@@ -246,7 +246,7 @@ export class MinHeap<T> {
     let i = a.length - 1;
     while (i > 0) {
       const p = (i - 1) >> 1;
-      if (!this.less(a[i], a[p])) break; // parent <= enfant
+      if (!this.less(a[i], a[p])) {break;} // parent <= enfant
       [a[i], a[p]] = [a[p], a[i]];
       i = p;
     }
@@ -254,7 +254,7 @@ export class MinHeap<T> {
 
   pop(): T | undefined {
     const a = this.a;
-    if (a.length === 0) return undefined;
+    if (a.length === 0) {return undefined;}
     const top = a[0];
     const x = a.pop()!;
     if (a.length) {
@@ -265,9 +265,9 @@ export class MinHeap<T> {
         let s = i;
         const l = i * 2 + 1;
         const r = l + 1;
-        if (l < a.length && this.less(a[l], a[s])) s = l;
-        if (r < a.length && this.less(a[r], a[s])) s = r;
-        if (s === i) break;
+        if (l < a.length && this.less(a[l], a[s])) {s = l;}
+        if (r < a.length && this.less(a[r], a[s])) {s = r;}
+        if (s === i) {break;}
         [a[i], a[s]] = [a[s], a[i]];
         i = s;
       }
@@ -304,7 +304,7 @@ export function* dijkstraVisits(
     const { r, c, g } = cur;
 
     // Ignore les entrées périmées ou déjà fixées
-    if (settled[r][c] || g !== dist[r][c]) continue;
+    if (settled[r][c] || g !== dist[r][c]) {continue;}
 
     // On "fixe" (settle) ce noeud : moment idéal pour l'afficher
     settled[r][c] = true;
@@ -317,8 +317,8 @@ export function* dijkstraVisits(
     for (const [dr, dc] of directions) {
       const nr = r + dr,
         nc = c + dc;
-      if (!inBounds(nr, nc)) continue;
-      if (grid[nr][nc] === 'obstacle' || settled[nr][nc]) continue;
+      if (!inBounds(nr, nc)) {continue;}
+      if (grid[nr][nc] === 'obstacle' || settled[nr][nc]) {continue;}
 
       const alt = dist[r][c] + 1;
       if (alt < dist[nr][nc]) {
@@ -368,7 +368,7 @@ export async function djikstras(
       if (!isStart && !isEnd) {
         // clone structurel minimal puis peinture
         gridSnap = gridSnap.map((row) => row.slice());
-        if (gridSnap[r][c] !== 'path') gridSnap[r][c] = 'visited';
+        if (gridSnap[r][c] !== 'path') {gridSnap[r][c] = 'visited';}
         setGrid(gridSnap);
       }
     }
@@ -415,11 +415,11 @@ export function* astarVisits(
     const { r, c, f } = cur;
 
     // Skip si déjà fermé
-    if (closed[r][c]) continue;
+    if (closed[r][c]) {continue;}
 
     // Skip si entrée obsolète (meilleure g connue depuis)
     const expectedF = g[r][c] + manhattan([r, c], end);
-    if (f !== expectedF) continue;
+    if (f !== expectedF) {continue;}
 
     // On "ferme" ce nœud : moment idéal pour publier/afficher
     closed[r][c] = true;
@@ -432,8 +432,8 @@ export function* astarVisits(
     for (const [dr, dc] of directions) {
       const nr = r + dr,
         nc = c + dc;
-      if (!inBounds(nr, nc)) continue;
-      if (grid[nr][nc] === 'obstacle' || closed[nr][nc]) continue;
+      if (!inBounds(nr, nc)) {continue;}
+      if (grid[nr][nc] === 'obstacle' || closed[nr][nc]) {continue;}
 
       const tentativeG = g[r][c] + 1;
       if (tentativeG < g[nr][nc]) {
@@ -484,7 +484,7 @@ export async function astar(
 
       if (!isStart && !isEnd) {
         gridSnap = gridSnap.map((row) => row.slice());
-        if (gridSnap[r][c] !== 'path') gridSnap[r][c] = 'visited';
+        if (gridSnap[r][c] !== 'path') {gridSnap[r][c] = 'visited';}
         setGrid(gridSnap);
       }
     }
