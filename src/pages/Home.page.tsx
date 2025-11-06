@@ -3,6 +3,7 @@ import { Group } from '@mantine/core';
 import { SelectedAlgorithmContext } from '@/components/AlgorithmSelector/AlgorithmSelector';
 import { Grid, GridHandle } from '@/components/Grid/Grid';
 import { Header } from '@/components/Header/Header';
+import { InstructionsModal } from '@/components/Modal/InstructionsModal';
 import { useDynamicGrid } from '@/hooks/useDynamicGrid';
 
 export const HomePage = () => {
@@ -16,6 +17,7 @@ export const HomePage = () => {
   return (
     <>
       <SelectedAlgorithmContext.Provider value={{ selectedAlgorithm, setSelectedAlgorithm }}>
+        <InstructionsModal />
         <Header
           clearGrid={() => gridRef.current?.clearGrid()}
           runAlgorithm={() => gridRef.current?.runAlgorithm()}

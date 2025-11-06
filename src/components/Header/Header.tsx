@@ -54,7 +54,6 @@ export const Header = ({ clearGrid, runAlgorithm, speed, setSpeed, setMazePatter
           data={MazePatternOptions}
           placeholder="Pick an algorithm"
           onChange={(value) => setMazePattern(value ?? 'empty')}
-          searchable
         />
         <Button onClick={clearGrid} variant="gradient" gradient={gradientStyle}>
           Clear Grid
