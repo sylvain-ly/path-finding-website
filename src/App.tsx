@@ -8,7 +8,7 @@ const colorSchemeManager = localStorageColorSchemeManager({ key: 'mantine-color-
 
 export const App = () => {
   return (
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={theme} colorSchemeManager={colorSchemeManager}>
       <ColorSchemeScript defaultColorScheme="dark" />
       <Router />
     </MantineProvider>
