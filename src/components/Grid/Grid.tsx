@@ -16,6 +16,7 @@ interface GridProps {
 
 export type GridHandle = {
   clearGrid: () => void;
+  resetGrid: () => void;
   runAlgorithm: () => void | Promise<void>;
 };
 
@@ -110,7 +111,20 @@ export const Grid = forwardRef<GridHandle, GridProps>((props: GridProps, ref) =>
     setDragging(null);
   };
 
-  const clearGrid = useCallback(() => {
+  const clearGrid = () => {
+    if (isBusy) {
+      return;
+    }
+    setGrid((prevGrid) =>
+      prevGrid.map((row) =>
+        row.map((cell) =>
+          cell === 'obstacle' || cell === 'start' || cell === 'end' ? cell : 'empty'
+        )
+      )
+    );
+  };
+
+  const resetGrid = useCallback(() => {
     if (isBusy) {
       return;
     }
@@ -144,7 +158,10 @@ export const Grid = forwardRef<GridHandle, GridProps>((props: GridProps, ref) =>
     }
   }, [grid, selectedAlgorithm, speed, isBusy]);
 
-  useImperativeHandle(ref, () => ({ clearGrid, runAlgorithm }), [clearGrid, runAlgorithm]);
+  useImperativeHandle(ref, () => ({ clearGrid, runAlgorithm, resetGrid }), [
+    clearGrid,
+    runAlgorithm,
+  ]);
 
   return (
     <div>

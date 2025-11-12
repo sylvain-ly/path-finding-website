@@ -43,3 +43,16 @@
   text-transform: uppercase;
   transition: color 100ms ease;
 }
+
+.select-label {
+  color: white;
+  font-weight: 600;
+}
+
+.buttonNoShrink {
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
