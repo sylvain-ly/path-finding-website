@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import { Select } from '@mantine/core';
+import classes from '../Header/Header.module.css';
 
 type Ctx = {
   selectedAlgorithm: string;
@@ -34,6 +35,7 @@ export const AlgorithmSelector = (props: AlgorithmSelectorProps) => {
   return (
     <Select
       label="Choose your algorithm"
+      classNames={{ label: classes['select-label'] }}
       data={algorithmOptions}
       value={selectedAlgorithm}
       onChange={(value) => setSelectedAlgorithm(value || '')}

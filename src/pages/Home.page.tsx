@@ -20,6 +20,7 @@ export const HomePage = () => {
         <InstructionsModal />
         <Header
           clearGrid={() => gridRef.current?.clearGrid()}
+          resetGrid={() => gridRef.current?.resetGrid()}
           runAlgorithm={() => gridRef.current?.runAlgorithm()}
           speed={speed}
           setSpeed={setSpeed}

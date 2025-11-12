@@ -53,7 +53,15 @@ export function InstructionsModal() {
               <b>Click "Visualize"</b> to run the algorithm
             </li>
             <li>
-              <b>Click "Clear"</b> to reset the grid
+              <b>Clear / Reset options:</b>
+              <ul style={{ marginTop: 6 }}>
+                <li>
+                  <b>Clear</b> — resets the grid but <i>keeps walls and start/end</i>
+                </li>
+                <li>
+                  <b>Reset</b> — clears everything and <i>re-centers start (left) & end (right)</i>
+                </li>
+              </ul>
             </li>
           </ul>
           <Button
